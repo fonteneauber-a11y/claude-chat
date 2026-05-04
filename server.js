@@ -10,14 +10,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages } = req.body;
-    console.log('Messages reçus:', JSON.stringify(messages));
-    const response = await client.messages.create({
+    const { messages, system } = req.body;
+    const params = {
       model: 'claude-opus-4-5-20251101',
-      max_tokens: 1024,
+      max_tokens: 1500,
       messages: messages
-    });
-    console.log('Réponse Anthropic:', JSON.stringify(response));
+    };
+    if (system) params.system = system;
+    const response = await client.messages.create(params);
     res.json({ content: response.content[0].text });
   } catch (error) {
     console.error('Erreur:', error.message);
