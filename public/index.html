@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Chat</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; background: #1a1a1a; color: #fff; height: 100vh; display: flex; flex-direction: column; }
+    #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; line-height: 1.5; }
+    .user { background: #2563eb; align-self: flex-end; }
+    .assistant { background: #2d2d2d; align-self: flex-start; }
+    #input-area { display: flex; padding: 16px; gap: 10px; background: #111; }
+    #input { flex: 1; padding: 12px; border-radius: 8px; border: none; background: #2d2d2d; color: #fff; font-size: 16px; resize: none; }
+    #send { padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    #send:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div id="messages"></div>
+  <div id="input-area">
+    <textarea id="input" rows="2" placeholder="Écris ton message..."></textarea>
+    <button id="send">Envoyer</button>
+  </div>
+
+  <script>
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    let history = [];
+
+    function addMessage(role, content) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      div.textContent = content;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      addMessage('user', text);
+      history.push({ role: 'user', content: text });
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = '...';
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: history })
+        });
+        const data = await res.json();
+        addMessage('assistant', data.content);
+        history.push({ role: 'assistant', content: data.content });
+      } catch (e) {
+        addMessage('assistant', 'Erreur : ' + e.message);
+      }
+
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Envoyer';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+  </script>
+</body>
+</html>
