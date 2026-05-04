@@ -12,7 +12,7 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { messages, system } = req.body;
     const params = {
-      model: 'claude-opus-4-5-20251101',
+     model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       messages: messages
     };
